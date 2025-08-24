@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kanban Desk – Taskora Style (Frappe v14 Ready)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f6f7fb;        --panel:#fff;      --panel-2:#fafafa;   --text:#0f172a;
+      --muted:#6b7280;     --border:#e5e7eb;  --primary:#4f46e5;   --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(15,23,42,.06);
+      --green:#22c55e; --red:#ef4444; --amber:#f59e0b; --blue:#3b82f6; --radius:14px;
+    }
+    [data-theme="dark"]{
+      --bg:#0b1020; --panel:#0f162d; --panel-2:#0c1327; --text:#e5e7eb; --muted:#94a3b8; --border:#212a44; --shadow:none;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans",sans-serif;color:var(--text)}
+    .app{display:grid;grid-template-columns:260px 1fr;height:100vh}
+
+    /* Sidebar */
+    .sidebar{background:var(--panel);border-right:1px solid var(--border);padding:16px;overflow:auto}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:700}
+    .brand .logo{width:28px;height:28px;border-radius:8px;background:var(--primary);display:grid;place-items:center;color:#fff;font-size:14px}
+    .nav{margin-top:18px}
+    .nav .item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text)}
+    .nav .item.active,.nav .item:hover{background:var(--panel-2)}
+    .aside-section{margin-top:18px}
+    .aside-title{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:10px 0}
+    .pill{font-size:11px;padding:2px 8px;border-radius:999px;background:#eef2ff;color:#3730a3}
+    [data-theme="dark"] .pill{background:#1f2a4d;color:#a5b4fc}
+
+    /* Main */
+    .main{display:flex;flex-direction:column;min-width:0}
+    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--panel)}
+    .left-tools{display:flex;gap:10px;align-items:center;flex:1}
+    .search{flex:1;display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:8px 12px}
+    .search input{border:0;background:transparent;outline:none;width:100%;color:var(--text)}
+    .filters{display:flex;gap:8px}
+    .btn{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);padding:8px 12px;border-radius:12px;font-size:14px;color:var(--text);cursor:pointer}
+    .btn:hover{background:var(--panel-2)}
+    .btn.primary{background:var(--primary);color:#fff;border-color:transparent}
+    select.btn{appearance:none;padding-right:28px;position:relative}
+
+    /* Filter bar */
+    .filterbar{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--panel)}
+    .filterbar .field{display:flex;align-items:center;background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:8px 12px;position:relative}
+    .filterbar input,.filterbar select{width:100%;border:0;background:transparent;outline:none;color:var(--text)}
+    .filterbar .actions{grid-column:span 6;display:flex;gap:10px;align-items:center}
+    .badge-count{font-weight:600;padding:6px 12px;border-radius:999px}
+    .count-new{background:#fefce8;color:#713f12}
+    .count-doing{background:#fee2e2;color:#7f1d1d}
+    .count-approve{background:#dcfce7;color:#166534}
+
+    @media (max-width:1200px){ .filterbar{grid-template-columns:repeat(3,1fr)} .filterbar .actions{grid-column:span 3} }
+    @media (max-width:700px){ .filterbar{grid-template-columns:1fr} .filterbar .actions{grid-column:span 1} }
+
+    /* Board */
+    .board{padding:18px;overflow:auto;height:100%}
+    .cols{display:grid;grid-auto-flow:column;grid-auto-columns:330px;gap:16px;align-items:flex-start}
+
+    .col{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:220px;max-height:calc(100vh - 160px)}
+    .col-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel);border-top-left-radius:var(--radius);border-top-right-radius:var(--radius);z-index:5}
+    .col-title{font-weight:600;display:flex;align-items:center;gap:8px}
+    .col-count{font-size:12px;color:#64748b;background:#f1f5f9;border-radius:999px;padding:2px 8px}
+    [data-theme="dark"] .col-count{background:#0b1228;color:#9aa7c7}
+    .tasks{display:flex;flex-direction:column;gap:12px;padding:14px;overflow:auto}
+    .add-task{margin:8px 14px 14px}
+
+    /* Card */
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow);position:relative;padding-top:34px}
+    .card:hover{border-color:#d1d5db}
+    [data-theme="dark"] .card:hover{border-color:#2b3658}
+    .badge{font-size:11px;padding:2px 8px;border-radius:999px;line-height:1;position:absolute;top:10px;left:12px}
+    .b-high{background:#fee2e2;color:#991b1b}
+    .b-medium{background:#fff7ed;color:#b45309}
+    .b-low{background:#ecfdf5;color:#065f46}
+    .row{display:flex;align-items:center;gap:8px;justify-content:space-between;min-height:0}
+    .title{font-weight:600}
+    .title[contenteditable="true"]{border:1px dashed transparent;border-radius:6px;padding:2px}
+    .title[contenteditable="true"]:focus{border-color:var(--border);outline:none;background:var(--panel-2)}
+    .meta{display:flex;gap:12px;color:#64748b;font-size:12px;flex-wrap:wrap}
+    .meta span{display:inline-flex;align-items:center;gap:6px}
+    .avatars{display:flex}
+    .avatar{width:22px;height:22px;border-radius:999px;border:2px solid var(--panel);margin-left:-6px;background:#e5e7eb}
+    .avatar:first-child{margin-left:0}
+    .card-actions{display:flex;gap:6px;position:absolute;top:8px;right:10px}
+    .icon-btn{border:1px solid var(--border);background:transparent;border-radius:8px;padding:4px 6px;cursor:pointer}
+    .icon-btn:hover{background:var(--panel-2)}
+    .dropping{outline:2px dashed #c7d2fe;outline-offset:-6px}
+
+    /* Modal (namespaced for Frappe/Bootstrap) */
+    .taskora-overlay{position:fixed;inset:0;background:rgba(2,6,23,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:5000}
+    .taskora-overlay.show{display:flex}
+    .taskora-modal{width:min(720px,98vw);background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);position:relative}
+    .taskora-modal header{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 20px 6px}
+    .taskora-modal .title{font-size:18px}
+    .taskora-modal .subtitle{color:var(--muted);font-size:13px;margin-top:2px}
+    .taskora-modal .pad{padding:10px 20px 18px}
+    .divider{height:1px;background:var(--border);margin:10px 0}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{font-size:12px;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;border:1px solid #e0e7ff}
+    [data-theme="dark"] .chip{background:#172554;color:#c7d2fe;border-color:#1e3a8a}
+    .field{display:grid;grid-template-columns:160px 1fr;gap:12px;align-items:center;margin-top:12px}
+    .assignees{display:flex;gap:8px;flex-wrap:wrap}
+    .assignee{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--panel-2);padding:4px 8px;border-radius:999px}
+    .progress{height:8px;background:var(--panel-2);border:1px solid var(--border);border-radius:999px;overflow:hidden}
+    .progress > span{display:block;height:100%;background:var(--green)}
+    .taskora-modal footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border)}
+
+    /* ===== Date Range popover ===== */
+    .datebox{display:flex;align-items:center;gap:8px;width:100%}
+    .date-display{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .popover{position:absolute;top:calc(100% + 8px);left:0;z-index:1000;background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:12px;min-width:320px;display:none}
+    .popover.show{display:block}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .preset .btn{padding:6px 10px;border-radius:999px;font-size:13px}
+
+    /* ===== Async select (searchable) ===== */
+    .selectx{position:relative;width:100%}
+    .selectx .selectx-input{width:100%;border:0;background:transparent;outline:none;color:var(--text)}
+    .selectx .selectx-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);max-height:240px;overflow:auto;display:none;z-index:999}
+    .selectx.open .selectx-menu{display:block}
+    .selectx .option{padding:8px 10px;cursor:pointer}
+    .selectx .option:hover{background:var(--panel-2)}
+    .selectx .empty{color:var(--muted);padding:10px}
+    .spinner{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand"><div class="logo">T</div> Taskora</div>
+
+      <nav class="nav">
+        <div class="item">🏠 Trang chủ</div>
+        <div class="item">📁 Dự án</div>
+        <div class="item">🧑‍💻 My Tasks</div>
+        <div class="item active">🗂️ Kanban desk</div>
+        <div class="item">🗓️ Lịch</div>
+        <div class="item">👥 Liên hệ</div>
+        <div class="item">🔔 Thông báo</div>
+        <div class="item">🔎 Tìm kiếm</div>
+      </nav>
+
+      <div class="aside-section">
+        <div class="aside-title">Latest Projects</div>
+        <div class="project"><span>Figma Design System</span> <span class="pill">Progress</span></div>
+        <div class="project"><span>Keep React</span> <span class="pill">Planning</span></div>
+        <div class="project"><span>StaticMania</span> <span class="pill">Completed</span></div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="topbar">
+        <div class="left-tools">
+          <div class="search"><span>🔎</span><input id="search" placeholder="Tìm task…"/></div>
+          <select id="priorityFilter" class="btn" title="Lọc theo độ ưu tiên">
+            <option value="">All Priorities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <button id="clearFilters" class="btn">🧹 Clear</button>
+          <!-- API input -->
+          <input id="apiUrl" class="btn" style="min-width:260px" placeholder="https://api.example.com/kanban/cards" />
+          <button id="loadApi" class="btn">⤓ Load from API</button>
+        </div>
+        <div class="filters">
+          <button id="darkToggle" class="btn">🌙 Dark</button>
+          <button class="btn primary" onclick="newColumn()">＋ New Column</button>
+        </div>
+      </div>
+
+      <!-- ===== FILTER BAR (đã thay: Date Range + async select) ===== -->
+      <div class="filterbar">
+        <div class="field"><input id="statusFilter" placeholder="Tìm trạng thái… (nhập, cách nhau bằng dấu phẩy)"/></div>
+        <div class="field"><input id="searchTask" placeholder="Tìm theo tên, mã, nhân sự…"/></div>
+
+        <!-- Date Range pretty -->
+        <div class="field" id="dateField">
+          <div class="datebox" id="dateBtn" role="button" tabindex="0" aria-haspopup="true">
+            <span>📅</span>
+            <div class="date-display" id="dateDisplay">Chọn khoảng ngày…</div>
+          </div>
+          <div class="popover" id="datePopover" aria-hidden="true">
+            <div class="grid2">
+              <div>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Từ ngày</div>
+                <input id="from_picker" type="date" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--panel-2)">
+              </div>
+              <div>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Đến ngày</div>
+                <input id="to_picker" type="date" style="width:100%;border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--panel-2)">
+              </div>
+            </div>
+            <div class="preset" style="margin-top:12px">
+              <button class="btn" data-preset="today">Hôm nay</button>
+              <button class="btn" data-preset="7d">7 ngày</button>
+              <button class="btn" data-preset="this-month">Tháng này</button>
+              <button class="btn primary" id="applyDate">Áp dụng</button>
+              <button class="btn" id="clearDate">Xoá</button>
+            </div>
+          </div>
+          <!-- giữ input ẩn cho API hiện có -->
+          <input id="from_date" type="hidden"/>
+          <input id="to_date" type="hidden"/>
+        </div>
+
+        <!-- Async Select: Người thực hiện -->
+        <div class="field">
+          <div id="assigneeSelect" class="selectx" aria-expanded="false">
+            <input class="selectx-input" id="assigneeInput" placeholder="Chọn Người Thực Hiện…" autocomplete="off"/>
+            <div class="selectx-menu" id="assigneeMenu"><div class="empty">Nhập để tìm…</div></div>
+          </div>
+          <input id="employeeSupervisor" type="hidden"/>
+        </div>
+
+        <!-- Async Select: Người duyệt -->
+        <div class="field">
+          <div id="approverSelect" class="selectx" aria-expanded="false">
+            <input class="selectx-input" id="approverInput" placeholder="Chọn Người Duyệt…" autocomplete="off"/>
+            <div class="selectx-menu" id="approverMenu"><div class="empty">Nhập để tìm…</div></div>
+          </div>
+          <input id="employeeApprover" type="hidden"/>
+        </div>
+
+        <div class="field"><input id="project" placeholder="Chọn Dự Án…"/></div>
+        <div class="field"><input id="tasktype" placeholder="Chọn Loại Nhiệm Vụ…"/></div>
+
+        <div class="actions">
+          <button id="btnFetch" class="btn primary">🔄 Cập nhật</button>
+          <button id="btnResetFilters" class="btn">🧹 Xoá lọc</button>
+          <span id="statusCounters" class="badge-count count-new" style="display:none"></span>
+          <span id="loadingsearch" class="badge-count" style="display:none">Đang tải…</span>
+        </div>
+      </div>
+
+      <section class="board">
+        <div class="cols" id="board"><!-- render here --></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL OVERLAY -->
+  <div class="taskora-overlay" id="overlay" aria-hidden="true"></div>
+
+  <!-- TEMPLATES (giữ nguyên) -->
+  <template id="colTmpl">
+    <div class="col" data-col>
+      <div class="col-head">
+        <div class="col-title"><span class="name" contenteditable="true">Column</span> <span class="col-count" data-count>0</span></div>
+        <div class="card-actions">
+          <button class="icon-btn" data-add>＋</button>
+          <button class="icon-btn" data-remove title="Xoá cột">🗑️</button>
+        </div>
+      </div>
+      <div class="tasks" data-list></div>
+      <div class="add-task"><button class="btn" data-add>＋ Add Task</button></div>
+    </div>
+  </template>
+
+  <template id="cardTmpl">
+    <article class="card" draggable="true" data-priority="medium">
+      <div class="row">
+        <span class="badge b-medium" data-badge>Medium</span>
+        <div class="card-actions">
+          <button class="icon-btn" data-edit title="Sửa tiêu đề">✏️</button>
+          <button class="icon-btn" data-del title="Xoá task">🗑️</button>
+        </div>
+      </div>
+      <div class="title" contenteditable="true">Task mới</div>
+      <div class="meta"><span>📅 Hôm nay</span><span>💬 0</span><span>☑️ 0/1</span></div>
+      <div class="avatars"><div class="avatar" title="User"></div></div>
+    </article>
+  </template>
+
+  <template id="modalTmpl">
+    <div class="taskora-modal" role="dialog" aria-modal="true">
+      <header>
+        <div>
+          <div class="title" id="mTitle">Title</div>
+          <div class="subtitle" id="mSubtitle">Project / Category</div>
+        </div>
+        <button class="icon-btn" id="mClose" aria-label="Đóng">✖</button>
+      </header>
+      <div class="pad">
+        <div class="chips" id="mChips"></div>
+        <p id="mDesc" style="margin:12px 0 0">Mô tả…</p>
+
+        <div class="divider"></div>
+
+        <div class="field"><div class="muted">Due Date</div><div id="mDue">—</div></div>
+        <div class="field"><div class="muted">Created</div><div id="mCreated">—</div></div>
+        <div class="field"><div class="muted">Assignees</div><div class="assignees" id="mAssignees"></div></div>
+
+        <div class="divider"></div>
+
+        <div class="field">
+          <div class="muted">Subtasks</div>
+          <div>
+            <div id="mSubInfo" class="muted" style="font-size:12px">(0/0)</div>
+            <div class="progress" style="margin-top:6px"><span id="mProgress" style="width:0%"></span></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="chips" id="mFooter"></div>
+      </div>
+      <footer>
+        <button class="btn" id="mEdit">Edit Task</button>
+        <button class="btn primary" id="mComplete">Complete Task</button>
+      </footer>
+    </div>
+  </template>
+
+  <script>
+    // ================== STATE / RENDER (giữ nguyên phần lớn) ==================
+    const LS_KEY = 'taskora_kanban_v3';
+    const boardEl = document.getElementById('board');
+
+    const DEFAULT_DATA = [
+      { name:'Backlog', items:[
+        { title:'Design System Updates', priority:'high', meta:['📅 Nov 15','💬 3','☑️ 2/5'], description:'Cập nhật hệ thống design.', due:'Dec 15, 2023', created:'Oct 1, 2023', assignees:['Alex Morgan','Jessica Chen'], subtasks:[0,5], attachments:0, comments:3, tag:'Figma Design System' },
+        { title:'Analytics Dashboard', priority:'low',  meta:['📅 Dec 5','💬 1','☑️ 0/5'], description:'Thiết kế & triển khai analytics dashboard.', due:'Dec 5, 2023', created:'Oct 15, 2023', assignees:['David Kim','Alex Morgan'], subtasks:[0,5], attachments:0, comments:1, tag:'Analytics' }
+      ]},
+      { name:'To Do', items:[
+        { title:'Mobile App Wireframes', priority:'medium', meta:['📅 Nov 20','💬 2','☑️ 1/3'], description:'Phác thảo khung mobile.', due:'Nov 20, 2023', created:'Oct 10, 2023', assignees:['Mai Tran'], subtasks:[1,3], attachments:2, comments:2, tag:'Mobile App' },
+        { title:'User Testing', priority:'medium', meta:['📅 Nov 28','💬 2','☑️ 0/3'], description:'Chuẩn bị kịch bản test.', due:'Nov 28, 2023', created:'Oct 18, 2023', assignees:['Lan Anh'], subtasks:[0,3], attachments:1, comments:2, tag:'Figma Design System' }
+      ]},
+      { name:'In Progress', items:[
+        { title:'User Research Analysis', priority:'low', meta:['📅 Nov 18','💬 5','☑️ 4/4'], description:'Tổng hợp insight người dùng.', due:'Nov 18, 2023', created:'Oct 5, 2023', assignees:['Alex Morgan','David Kim'], subtasks:[4,4], attachments:3, comments:5, tag:'StaticMania' },
+        { title:'API Integration', priority:'high', meta:['📅 Nov 25','💬 6','☑️ 1/4'], description:'Tích hợp API thanh toán.', due:'Nov 25, 2023', created:'Oct 8, 2023', assignees:['Jessica Chen'], subtasks:[1,4], attachments:1, comments:6, tag:'Mobile App Development' },
+        { title:'Payment Gateway Integration', priority:'high', meta:['📅 Nov 30','💬 2','☑️ 1/2'], description:'Kết nối cổng thanh toán.', due:'Nov 30, 2023', created:'Oct 12, 2023', assignees:['Lan Anh'], subtasks:[1,2], attachments:0, comments:2, tag:'E‑commerce Platform' }
+      ]},
+      { name:'In Review', items:[
+        { title:'Component Documentation', priority:'high', meta:['📅 Nov 22','💬 2','☑️ 2/6'], description:'Tài liệu hoá các component.', due:'Nov 22, 2023', created:'Oct 14, 2023', assignees:['Alex Morgan','Mai Tran'], subtasks:[2,6], attachments:1, comments:2, tag:'Keep React' },
+        { title:'Product Catalog', priority:'medium', meta:['📅 Nov 20','💬 4','☑️ 3/3'], description:'Danh mục sản phẩm.', due:'Nov 20, 2023', created:'Oct 3, 2023', assignees:['Jessica Chen'], subtasks:[3,3], attachments:2, comments:4, tag:'E‑commerce Platform' }
+      ]},
+      { name:'Done', items:[
+        { title:'Content Strategy', priority:'medium', meta:['📅 Nov 10','💬 1','☑️ 3/3'], description:'Chiến lược nội dung.', due:'Nov 10, 2023', created:'Sep 30, 2023', assignees:['David Kim'], subtasks:[3,3], attachments:1, comments:1, tag:'StaticMania' }
+      ]}
+    ];
+
+    let API_DATA = null; // last loaded dataset from API
+    let LAST_DS_TASK = []; // lưu dsTask để feed vào select fallback
+
+    function saveState(){
+      const data = [...boardEl.querySelectorAll('[data-col]')].map(col=>({
+        name: col.querySelector('.name').textContent.trim() || 'Column',
+        items: [...col.querySelectorAll('.card')].map(card=>({
+          title: card.querySelector('.title').textContent.trim(),
+          priority: card.dataset.priority,
+          meta: [...card.querySelectorAll('.meta span')].map(s=>s.textContent),
+          description: card.dataset.desc||'',
+          due: card.dataset.due||'',
+          created: card.dataset.created||'',
+          assignees: card.dataset.assignees? JSON.parse(card.dataset.assignees):[],
+          subtasks: card.dataset.subtasks? JSON.parse(card.dataset.subtasks):[0,0],
+          attachments: +card.dataset.attachments||0,
+          comments: +card.dataset.comments||0,
+          tag: card.dataset.tag||''
+        }))
+      }));
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+    }
+    function loadState(){
+      if (API_DATA) return API_DATA; // Prefer fresh API data
+      try{ return JSON.parse(localStorage.getItem(LS_KEY)) || DEFAULT_DATA }
+      catch{ return DEFAULT_DATA }
+    }
+
+    const colTmpl = document.getElementById('colTmpl');
+    const cardTmpl = document.getElementById('cardTmpl');
+
+    function render(){
+      boardEl.innerHTML = '';
+      const data = loadState();
+      data.forEach(colData=>{
+        const col = colTmpl.content.cloneNode(true);
+        const colRoot = col.querySelector('[data-col]');
+        colRoot.querySelector('.name').textContent = colData.name;
+        const list = colRoot.querySelector('[data-list]');
+
+        (colData.items||[]).forEach(item=> list.appendChild(makeCard(item)) );
+
+        colRoot.querySelectorAll('[data-add]').forEach(btn=> btn.addEventListener('click',()=> addCard(list)) );
+        colRoot.querySelector('[data-remove]').addEventListener('click',()=>{ if(confirm('Xoá cột này?')){ colRoot.remove(); updateCounts(); saveState(); }});
+
+        enableDnD(list);
+        boardEl.appendChild(col);
+      });
+      updateCounts();
+      applyFilters();
+      // refresh nguồn dữ liệu cho async select (fallback)
+      refreshPeopleFallback();
+    }
+
+    function makeCard(item={}){
+      const node = cardTmpl.content.cloneNode(true);
+      const card = node.querySelector('.card');
+      const ttl = node.querySelector('.title');
+      const badge = node.querySelector('[data-badge]');
+      ttl.textContent = item.title || 'Task mới';
+      setPriority(card, badge, item.priority||'medium');
+
+      // store meta in dataset for modal
+      card.dataset.desc = item.description||'';
+      card.dataset.due = item.due||'';
+      card.dataset.created = item.created||'';
+      card.dataset.assignees = JSON.stringify(item.assignees||[]);
+      card.dataset.subtasks = JSON.stringify(item.subtasks||[0,0]);
+      card.dataset.attachments = item.attachments||0;
+      card.dataset.comments = item.comments||0;
+      card.dataset.tag = item.tag||'';
+
+      const metaWrap = node.querySelector('.meta');
+      metaWrap.innerHTML = '';
+      (item.meta||['📅 Hôm nay','💬 0','☑️ 0/1']).forEach(m=>{
+        const s = document.createElement('span'); s.textContent = m; metaWrap.appendChild(s);
+      })
+      const avatars = node.querySelector('.avatars');
+      avatars.innerHTML = '';
+      (item.assignees||['User']).forEach(_=>{ const a=document.createElement('div'); a.className='avatar'; avatars.appendChild(a) })
+
+      // events
+      ttl.addEventListener('blur', saveState);
+      node.querySelector('[data-del]').addEventListener('click',()=>{ if(confirm('Xoá task này?')){ card.remove(); updateCounts(); saveState(); }});
+      node.querySelector('[data-edit]').addEventListener('click',()=>{ ttl.focus(); document.execCommand && document.execCommand('selectAll',false,null);});
+      card.addEventListener('dragstart',()=>{ card.style.opacity=.5; });
+      card.addEventListener('dragend',()=>{ card.style.opacity=''; updateCounts(); saveState(); });
+
+      // modal open
+      card.addEventListener('click', (e)=>{
+        if(e.target.closest('.icon-btn')) return;
+        const colName = card.closest('[data-col]').querySelector('.name').textContent.trim();
+        openModal(card, colName);
+      });
+
+      // cycle priority (right click)
+      card.addEventListener('contextmenu',e=>{
+        e.preventDefault();
+        const order=['low','medium','high'];
+        const cur = card.dataset.priority||'medium';
+        const next = order[(order.indexOf(cur)+1)%order.length];
+        setPriority(card,badge,next); saveState(); applyFilters();
+      });
+      return node;
+    }
+
+    function setPriority(card,badge,level){
+      card.dataset.priority = level;
+      badge.className='badge '+(level==='high'?'b-high':level==='low'?'b-low':'b-medium');
+      badge.textContent = level.charAt(0).toUpperCase()+level.slice(1);
+    }
+
+    function addCard(list){ list.appendChild(makeCard()); updateCounts(); saveState(); }
+
+    function newColumn(){
+      const data = loadState();
+      data.push({name:'New Column', items:[]});
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+      render();
+    }
+
+    function enableDnD(list){
+      list.addEventListener('dragover', e => { e.preventDefault(); list.classList.add('dropping'); });
+      list.addEventListener('dragleave', () => list.classList.remove('dropping'));
+      list.addEventListener('drop', e => {
+        list.classList.remove('dropping');
+        const card = document.querySelector('.card[style*="opacity: 0.5"]');
+        if(card){ list.appendChild(card); updateCounts(); saveState(); }
+      });
+    }
+
+    function updateCounts(){
+      document.querySelectorAll('[data-col]').forEach(col=>{
+        const cnt = col.querySelectorAll('.card').length;
+        const el = col.querySelector('[data-count]');
+        if(el) el.textContent = cnt;
+      })
+    }
+
+    // ------- Filters & Theme -------
+    const priorityFilter = document.getElementById('priorityFilter');
+    const searchInput = document.getElementById('search');
+    const clearBtn = document.getElementById('clearFilters');
+    const darkToggle = document.getElementById('darkToggle');
+
+    function applyFilters(){
+      const q = (searchInput.value||'').toLowerCase();
+      const pr = (priorityFilter.value||'').toLowerCase();
+      document.querySelectorAll('.card').forEach(card=>{
+        const matchText = card.querySelector('.title').textContent.toLowerCase().includes(q);
+        const matchPr = !pr || (card.dataset.priority===pr);
+        card.style.display = (matchText && matchPr) ? '' : 'none';
+      });
+    }
+    searchInput.addEventListener('input', applyFilters);
+    priorityFilter.addEventListener('change', applyFilters);
+    clearBtn.addEventListener('click', ()=>{ searchInput.value=''; priorityFilter.value=''; applyFilters(); });
+
+    const THEME_KEY='taskora_theme';
+    function setTheme(mode){
+      document.documentElement.setAttribute('data-theme', mode);
+      localStorage.setItem(THEME_KEY, mode);
+      const btn = document.getElementById('darkToggle');
+      if(btn) btn.textContent = mode==='dark' ? '☀️ Light' : '🌙 Dark';
+    }
+    setTheme(localStorage.getItem(THEME_KEY)||'light');
+    darkToggle.addEventListener('click', ()=> setTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'));
+
+    // ------- Modal -------
+    const overlay = document.getElementById('overlay');
+    if (overlay && overlay.parentElement !== document.body) { document.body.appendChild(overlay); }
+    const modalTmpl = document.getElementById('modalTmpl');
+
+    function openModal(card, colName){
+      overlay.innerHTML = '';
+      const node = modalTmpl.content.cloneNode(true);
+      overlay.appendChild(node);
+      overlay.classList.add('show');
+      overlay.setAttribute('aria-hidden','false');
+
+      const get = sel => overlay.querySelector(sel);
+
+      get('#mTitle').textContent = card.querySelector('.title').textContent.trim();
+      get('#mSubtitle').textContent = card.dataset.tag || '—';
+
+      const chips = get('#mChips');
+      const chipCol = document.createElement('span'); chipCol.className='chip'; chipCol.textContent = colName; chips.appendChild(chipCol);
+      const chipPr = document.createElement('span'); chipPr.className='chip'; chipPr.textContent = (card.dataset.priority||'').replace(/^./,c=>c.toUpperCase())+ ' Priority'; chips.appendChild(chipPr);
+
+      get('#mDesc').textContent = card.dataset.desc || 'Chưa có mô tả.';
+      get('#mDue').textContent = card.dataset.due || '—';
+      get('#mCreated').textContent = card.dataset.created || '—';
+
+      const as = get('#mAssignees');
+      const names = card.dataset.assignees? JSON.parse(card.dataset.assignees):[];
+      if(names.length===0){ as.innerHTML = '<span class="muted">Không có</span>'; }
+      names.forEach(n=>{ const el=document.createElement('span'); el.className='assignee'; el.innerHTML=`<span class="avatar" style="width:18px;height:18px;border:1px solid var(--border)"></span> ${n}`; as.appendChild(el) })
+
+      const [done,total] = card.dataset.subtasks? JSON.parse(card.dataset.subtasks):[0,0];
+      get('#mSubInfo').textContent = `(${done}/${total})`;
+      const pct = total? Math.round(done*100/total):0; get('#mProgress').style.width = pct+'%';
+
+      const footer = get('#mFooter');
+      const att = document.createElement('span'); att.className='chip'; att.textContent = `${card.dataset.attachments||0} attachments`; footer.appendChild(att);
+      const cmt = document.createElement('span'); cmt.className='chip'; cmt.textContent = `${card.dataset.comments||0} comments`; footer.appendChild(cmt);
+
+      get('#mClose').addEventListener('click', closeModal);
+      overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+      document.addEventListener('keydown', escClose);
+
+      get('#mEdit').addEventListener('click', ()=>{
+        const newTitle = prompt('Sửa tiêu đề task:', get('#mTitle').textContent);
+        if(newTitle!==null){ get('#mTitle').textContent = newTitle; card.querySelector('.title').textContent = newTitle; saveState(); }
+        const newDesc = prompt('Sửa mô tả:', get('#mDesc').textContent);
+        if(newDesc!==null){ get('#mDesc').textContent = newDesc; card.dataset.desc = newDesc; saveState(); }
+      });
+
+      get('#mComplete').addEventListener('click', ()=>{ moveToDone(card); closeModal(); });
+    }
+
+    function closeModal(){ overlay.classList.remove('show'); overlay.innerHTML=''; overlay.setAttribute('aria-hidden','true'); document.removeEventListener('keydown', escClose); }
+    function escClose(e){ if(e.key==='Escape') closeModal(); }
+    function moveToDone(card){
+      let doneCol = [...document.querySelectorAll('[data-col]')]
+        .find(c=>c.querySelector('.name').textContent.trim().toLowerCase()==='done');
+      if(!doneCol){ newColumn(); doneCol = [...document.querySelectorAll('[data-col]')].slice(-1)[0]; doneCol.querySelector('.name').textContent='Done'; }
+      doneCol.querySelector('[data-list]').appendChild(card);
+      card.dataset.priority = 'medium';
+      updateCounts(); saveState();
+    }
+
+    function runTests(){
+      try{
+        console.group('%cTaskora smoke tests','color:#4f46e5');
+        console.assert(typeof THEME_KEY==='string','THEME_KEY defined once');
+        const before = document.documentElement.getAttribute('data-theme');
+        setTheme('dark'); console.assert(document.documentElement.getAttribute('data-theme')==='dark','Dark theme applied');
+        setTheme(before||'light');
+        console.assert(document.querySelectorAll('[data-col]').length>0,'Columns rendered');
+        console.assert(document.querySelectorAll('.card').length>0,'Cards rendered');
+        const first = document.querySelector('.card');
+        if(first){ first.click(); console.assert(document.getElementById('overlay').classList.contains('show'),'Modal opened'); closeModal(); }
+        console.groupEnd();
+      }catch(e){ console.error('Tests failed', e); }
+    }
+
+    render();
+    requestAnimationFrame(runTests);
+
+    // ================== FRAPPE LOADER (có lưu dsTask) ==================
+    async function loadTasksToBoard(pagenumwf = 1, wfname = "", sortBy = "", taskStatus = []){
+      if (typeof frappe === 'undefined' || !frappe.call){ console.info('Frappe not found, skipping server load.'); return; }
+      const args = {
+        searchText: document.getElementById('searchTask').value || '',
+        taskStatus,
+        fromdate: document.getElementById('from_date').value || '',
+        todate: document.getElementById('to_date').value || '',
+        approver: document.getElementById('employeeApprover').value || '',
+        supervisor: document.getElementById('employeeSupervisor').value || '',
+        project: document.getElementById('project').value || '',
+        tasktype: document.getElementById('tasktype').value || '',
+        sortBy,
+        wfname: wfname || '',
+        pagenumwf
+      };
+      document.getElementById('loadingsearch').style.display='inline-block';
+      console.log('datasend', args);
+      try{
+        const r = await frappe.call({ method: 'quanlytask', type: 'POST', args });
+        const payload = r.message || r; const data = payload?.data || payload || {}; const dsTask = data.dsTask || [];
+        LAST_DS_TASK = dsTask || [];
+        const listStates = await getListTaskWorkflowWrap(taskStatus, dsTask);
+        const byCol = {};
+        for(const st of listStates){ byCol[st.state] = { name: st.trans || st.state, items: [] }; }
+        for(const t of dsTask){ if(!t || !t.workflow_state || !t.creation) continue; const key=t.workflow_state; (byCol[key]||(byCol[key]={name:key,items:[]})).items.push(toBoardCard(t)); }
+        window.API_DATA = Object.values(byCol);
+        render();
+        updateStatusCounters(listStates, dsTask);
+        refreshPeopleFallback(); // cập nhật nguồn dữ liệu cho select
+      }catch(e){ console.error('Load quanlytask failed', e); frappe.msgprint && frappe.msgprint('Có lỗi khi tải dữ liệu: '+(e.message||e)); }
+      finally{ document.getElementById('loadingsearch').style.display='none'; }
+    }
+
+    function toBoardCard(t){
+      const assignees = Array.isArray(t.listuser) ? t.listuser.filter(u=>u && u.type==='Người thực hiện').map(u=>u.employee_name) : [];
+      const meta=[]; const dueStr = formatUserDate(t.exp_end_date); meta.push('📅 '+(dueStr||'—')); if(typeof t.kpi_percent==='number' && t.kpi_percent!==0) meta.push(`${t.kpi_percent}% KPI`); if(t.tag_status) meta.push(t.tag_status);
+      return { title: t.subject||t.name||'Untitled', priority: mapPriority(t.priority), meta, description: t.description||'', due: dueStr, created: t.creation||'', assignees, subtasks:[0,0], attachments:0, comments:0, tag: t.type||t.tag_status||'' };
+    }
+    function mapPriority(p){ if(!p) return 'medium'; const s=String(p).toLowerCase(); if(/(quan trọng|urgent|cao|high)/.test(s)) return 'high'; if(/(thấp|low)/.test(s)) return 'low'; return 'medium'; }
+    function formatUserDate(d){ try{ if(!d) return ''; if (window.frappe?.datetime?.moment) return frappe.datetime.moment(d).format('DD/MM/YYYY'); return new Date(d).toLocaleDateString(); }catch{return String(d||'');} }
+    async function getListTaskWorkflowWrap(taskStatus, dsTask){
+      if (typeof getListTaskWorkflow==='function'){ return await getListTaskWorkflow(taskStatus); }
+      const uniq=[...new Set(dsTask.map(t=>t.workflow_state).filter(Boolean))];
+      return uniq.map(s=>({state:s, trans:s}));
+    }
+    function updateStatusCounters(states, tasks){
+      const el=document.getElementById('statusCounters'); if(!el) return; const counts={}; tasks.forEach(t=>{counts[t.workflow_state]=(counts[t.workflow_state]||0)+1});
+      const label=states.map(s=>`${s.trans}(${counts[s.state]||0})`).join(' • '); el.textContent=label; el.style.display='inline-block';
+    }
+
+    document.getElementById('btnFetch').addEventListener('click', ()=> loadTasksToBoard());
+    document.getElementById('btnResetFilters').addEventListener('click', ()=>{
+      ['statusFilter','searchTask','project','tasktype'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+      // clear advanced
+      setDateRange('', '');
+      setSelectValue('assignee', '');
+      setSelectValue('approver', '');
+      loadTasksToBoard();
+    });
+    if (typeof frappe!=='undefined' && frappe.call){ loadTasksToBoard(); }
+
+    // ================== API LOADER (giữ, để demo) ==================
+    async function loadFromApi(url){
+      if(!url) throw new Error('Thiếu URL API');
+      const res = await fetch(url, { headers:{'accept':'application/json'} });
+      if(!res.ok) throw new Error('API trả lỗi HTTP '+res.status);
+      const payload = await res.json();
+      let normalized;
+      if (Array.isArray(payload.columns)) {
+        normalized = payload.columns;
+      } else if (Array.isArray(payload.cards)) {
+        const byCol = {};
+        for (const c of payload.cards){
+          const col = (c.column||'Backlog');
+          byCol[col] = byCol[col]||{ name: col, items: [] };
+          byCol[col].items.push(mapCard(c));
+        }
+        normalized = Object.values(byCol);
+      } else {
+        throw new Error('Định dạng JSON không hợp lệ. Cần fields `columns` hoặc `cards`.');
+      }
+      API_DATA = normalized;
+      render();
+      console.info('Loaded', normalized);
+    }
+    function mapCard(c){
+      return {
+        title: c.title||'Untitled',
+        priority: (c.priority||'medium').toLowerCase(),
+        meta: c.meta || [],
+        description: c.description||'',
+        due: c.due||'',
+        created: c.created||'',
+        assignees: c.assignees||[],
+        subtasks: c.subtasks||[0,0],
+        attachments: c.attachments||0,
+        comments: c.comments||0,
+        tag: c.tag||''
+      };
+    }
+    document.getElementById('loadApi').addEventListener('click', async ()=>{
+      const url = document.getElementById('apiUrl').value.trim();
+      try{ await loadFromApi(url); }
+      catch(e){ alert('Load API thất bại: '+e.message); console.error(e); API_DATA=null; render(); }
+    });
+    (function demoApiTests(){
+      const example = { cards:[
+        { title:'Demo A', column:'Backlog', priority:'high', assignees:['A'], meta:['📅 Today'] },
+        { title:'Demo B', column:'To Do', priority:'medium', assignees:['B'], meta:['📅 Today'] },
+        { title:'Demo C', column:'Done', priority:'low', assignees:['C'], meta:['📅 Today'] }
+      ]};
+      const blob = new Blob([JSON.stringify(example)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      loadFromApi(url).then(()=>{ URL.revokeObjectURL(url); });
+    })();
+
+    // ================== DATE RANGE UI ==================
+    const dateBtn = document.getElementById('dateBtn');
+    const datePopover = document.getElementById('datePopover');
+    const dateDisplay = document.getElementById('dateDisplay');
+    const fromHidden = document.getElementById('from_date');
+    const toHidden = document.getElementById('to_date');
+
+    function fmt(d){ if(!d) return ''; const x=new Date(d); if(Number.isNaN(x)) return ''; const dd=x.getDate().toString().padStart(2,'0'); const mm=(x.getMonth()+1).toString().padStart(2,'0'); const yy=x.getFullYear(); return `${yy}-${mm}-${dd}`; }
+    function fmtVN(d){ if(!d) return ''; const x=new Date(d); if(Number.isNaN(x)) return ''; const dd=x.getDate().toString().padStart(2,'0'); const mm=(x.getMonth()+1).toString().padStart(2,'0'); const yy=x.getFullYear(); return `${dd}/${mm}/${yy}`; }
+
+    function setDateRange(from, to){
+      fromHidden.value = from || '';
+      toHidden.value   = to   || '';
+      if(from && to){ dateDisplay.textContent = `${fmtVN(from)} → ${fmtVN(to)}`; }
+      else if(from){ dateDisplay.textContent = `Từ ${fmtVN(from)}`; }
+      else if(to){ dateDisplay.textContent = `Đến ${fmtVN(to)}`; }
+      else{ dateDisplay.textContent = 'Chọn khoảng ngày…'; }
+      document.getElementById('from_picker').value = from || '';
+      document.getElementById('to_picker').value   = to   || '';
+    }
+
+    dateBtn.addEventListener('click', ()=>{
+      datePopover.classList.toggle('show');
+      datePopover.setAttribute('aria-hidden', !datePopover.classList.contains('show'));
+    });
+    document.addEventListener('click', (e)=>{
+      if(!datePopover.contains(e.target) && !document.getElementById('dateField').contains(e.target)){
+        datePopover.classList.remove('show'); datePopover.setAttribute('aria-hidden','true');
+      }
+    });
+    document.getElementById('applyDate').addEventListener('click', ()=>{
+      const f = document.getElementById('from_picker').value;
+      const t = document.getElementById('to_picker').value;
+      setDateRange(f, t);
+      datePopover.classList.remove('show');
+    });
+    document.getElementById('clearDate').addEventListener('click', ()=>{
+      setDateRange('', ''); datePopover.classList.remove('show');
+    });
+    // presets
+    datePopover.querySelectorAll('[data-preset]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const key = btn.getAttribute('data-preset');
+        const now = new Date();
+        const y=now.getFullYear(), m=now.getMonth();
+        if(key==='today'){
+          const d = fmt(now);
+          setDateRange(d, d);
+        }else if(key==='7d'){
+          const to = fmt(now);
+          const from = fmt(new Date(now.getTime()-6*24*3600*1000));
+          setDateRange(from, to);
+        }else if(key==='this-month'){
+          const from = fmt(new Date(y, m, 1));
+          const to   = fmt(new Date(y, m+1, 0));
+          setDateRange(from, to);
+        }
+      });
+    });
+
+    // ================== ASYNC SELECT (assignee / approver) ==================
+    const SEARCH_METHOD = 'search_people'; // <- nếu có backend: method nhận args {role, searchtext}
+    let FALLBACK_PEOPLE = { assignee: [], approver: [] };
+
+    function refreshPeopleFallback(){
+      // lấy unique tên từ dsTask nếu có
+      const setA = new Set(), setP = new Set();
+      (LAST_DS_TASK||[]).forEach(t=>{
+        (Array.isArray(t.listuser)? t.listuser:[]).forEach(u=>{
+          if(!u || !u.employee_name) return;
+          if((u.type||'').includes('Người thực hiện')) setA.add(u.employee_name);
+          if((u.type||'').includes('Người duyệt')) setP.add(u.employee_name);
+        });
+      });
+      // nếu không có thì lấy từ board
+      if(setA.size===0 || setP.size===0){
+        loadState().forEach(col=>{
+          (col.items||[]).forEach(it=> (it.assignees||[]).forEach(n=>setA.add(n)));
+        });
+      }
+      FALLBACK_PEOPLE.assignee = [...setA];
+      FALLBACK_PEOPLE.approver = [...setP];
+    }
+
+    function createAsyncSelect(kind){
+      const root = document.getElementById(kind==='assignee' ? 'assigneeSelect' : 'approverSelect');
+      const input = document.getElementById(kind==='assignee' ? 'assigneeInput' : 'approverInput');
+      const menu  = document.getElementById(kind==='assignee' ? 'assigneeMenu' : 'approverMenu');
+      const hidden = document.getElementById(kind==='assignee' ? 'employeeSupervisor' : 'employeeApprover');
+
+      let timer = null;
+      let lastQuery = '';
+
+      function open(){ root.classList.add('open'); root.setAttribute('aria-expanded','true'); }
+      function close(){ root.classList.remove('open'); root.setAttribute('aria-expanded','false'); }
+
+      function setValue(val){
+        hidden.value = val || '';
+        input.value  = val || '';
+      }
+
+      function renderOptions(items){
+        menu.innerHTML = '';
+        if(!items || items.length===0){ const div=document.createElement('div'); div.className='empty'; div.textContent='Không có kết quả'; menu.appendChild(div); return; }
+        items.forEach(name=>{
+          const opt=document.createElement('div');
+          opt.className='option';
+          opt.textContent=name;
+          opt.addEventListener('click', ()=>{ setValue(name); close(); });
+          menu.appendChild(opt);
+        });
+      }
+
+      async function fetchRemote(q){
+        // Nếu có frappe & method backend -> gọi theo yêu cầu searchtext
+        if (typeof frappe!=='undefined' && frappe.call){
+          try{
+            const r = await frappe.call({ method: SEARCH_METHOD, type:'GET', args:{ role: kind, searchtext: q }});
+            const arr = (r.message || r || []);
+            // chấp nhận nhiều định dạng: ["A","B"] hoặc [{name:"A"}]
+            const names = Array.isArray(arr) ? arr.map(x => (typeof x==='string'? x : (x.name||x.employee_name||x.full_name||''))).filter(Boolean) : [];
+            return names;
+          }catch(e){ console.warn('remote search failed, fallback local', e); }
+        }
+        // Fallback local filter
+        const src = FALLBACK_PEOPLE[kind] || [];
+        const qq = (q||'').toLowerCase();
+        return src.filter(n => n.toLowerCase().includes(qq)).slice(0, 30);
+      }
+
+      input.addEventListener('focus', ()=>{ open(); if(!input.value) renderOptions([]); });
+      input.addEventListener('click', ()=> open());
+      document.addEventListener('click', (e)=>{ if(!root.contains(e.target)) close(); });
+
+      input.addEventListener('input', ()=>{
+        const q = input.value.trim();
+        lastQuery = q;
+        menu.innerHTML = `<div class="empty"><span class="spinner">Đang tìm “${q}”…</span></div>`;
+        open();
+        clearTimeout(timer);
+        timer = setTimeout(async ()=>{
+          const items = await fetchRemote(q);
+          // tránh race condition
+          if(q !== lastQuery) return;
+          renderOptions(items);
+        }, 250);
+      });
+
+      // khi clear bằng nút reset filters
+      return { setValue };
+    }
+
+    const assigneeSelect = createAsyncSelect('assignee');
+    const approverSelect = createAsyncSelect('approver');
+
+    function setSelectValue(kind, val){ (kind==='assignee'? assigneeSelect:approverSelect).setValue(val||''); }
+
+  </script>
+</body>
+</html>
