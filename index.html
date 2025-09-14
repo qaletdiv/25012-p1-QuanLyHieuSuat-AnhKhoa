@@ -1,91 +1,232 @@
 <!DOCTYPE html>
-<html lang="vi" data-theme="light">
+<html lang="vi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kanban Desk – Taskora Style</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Kanban Desk</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css" />
-  <link rel="stylesheet" href="assets/css/button.css" />
+  <link rel="stylesheet" href="assets/css/style.css"/>
 </head>
 <body>
-  <div class="app">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="brand"><div class="logo">O</div><strong>Oshima</strong></div>
-      <nav class="nav">
-        <a class="active" href="#">Quản lý công việc</a>
-        
-      </nav>
-      <div class="sep"></div>
-      
-    </aside>
+  <!-- LOGIN -->
+  <div id="login" class="login">
+    <header class="login__topbar">
+      <div class="login__brand"><img src="assets/img/avatar.svg" class="login__logo"/><span>CAO HÙNG</span></div>
+      <div class="login__actions">
+        <input class="login__search" placeholder="Search..."/>
+        <button class="login__ghost">Login</button>
+        <button class="login__chip">việt nam</button>
+      </div>
+    </header>
+    <div class="login__wrap">
+      <div class="login-card">
+        <div class="login-card__logo"><img src="assets/img/avatar.svg"/><span>CAO HÙNG</span></div>
+        <h2 class="login-card__title">Login to Cao Hùng</h2>
+        <form id="loginForm" class="login-card__form">
+          <label class="login-card__row">
+            <span class="login-card__icon">✉</span>
+            <input id="lg_user" placeholder="Administrator" autocomplete="username" value="123"/>
+          </label>
+          <label class="login-card__row">
+            <span class="login-card__icon">🔒</span>
+            <input id="lg_pass" type="password" value="123" autocomplete="current-password"/>
+            <button type="button" class="login-card__show" data-toggle>Show</button>
+          </label>
+          <div class="login-card__aux"><a href="#" class="login-card__link">Quên Mật Khẩu</a></div>
+          <button class="btn btn--danger login-card__submit" type="submit">Đăng Nhập</button>
+          <button class="btn login-card__ghost" type="button">Chưa có tài khoản? Đăng ký ngay</button>
+          <div class="login-card__hint">Mặc định: <b>user: 123</b> / <b>pass: 123</b></div>
+          <div class="login-card__small">Don't have an account? <a href="#">Sign up</a></div>
+        </form>
+      </div>
+    </div>
+  </div>
 
-    <!-- MAIN -->
-    <main class="main">
-      <div class="toolbar">
-        <div class="filters">
-          <label class="ip"><input id="q-task" placeholder="Tìm task..."/></label>
-          <label class="ip"><input placeholder="Tìm trạng thái…"/></label>
-          <label class="ip"><input placeholder="Chọn Loại Nhiệm Vụ…"/></label>
-          <label class="ip"><button class="btn" id="btn-refresh">Cập nhật</button><button class="btn" id="btn-clear" style="margin-left:6px">Xoá lọc</button></label>
-          <label class="ip"><input type="date" class="field" id="from_picker"></label>
-          <label class="ip"><input placeholder="Chọn Dự Án…"/></label>
+  <!-- APP -->
+  <div id="app" class="app is-hidden">
+    <header class="appbar">
+      <div class="appbar__left"><strong>Kanban Desk</strong></div>
+      <div class="appbar__right">
+        <button id="btnAccount" class="avatar-btn" title="Account">
+          <img src="assets/img/avatar.svg" alt="user"/>
+          <span class="avatar-btn__name">User</span>
+        </button>
+        <div id="acctMenu" class="menu" hidden>
+          <button class="menu__item" data-action="profile">My Profile</button>
+          <button class="menu__item" data-action="logout">Logout</button>
         </div>
       </div>
+    </header>
+    <main class="main">
+      <div class="toolbar">
+        <div class="toolbar__filters">
+          <label class="toolbar__control"><input id="q-task" class="field field--search" placeholder="Tìm task..."/></label>
+          <label class="toolbar__control"><button class="btn" id="btn-refresh">Cập nhật</button><button class="btn" id="btn-clear" style="margin-left:6px">Xoá lọc</button></label>
+          <label class="toolbar__control"><input type="date" class="field" id="from_picker"></label>
+        </div>
+      </div>
+      
+      <!-- TEAM MEMBERS -->
+      <section class="members">
+        <div class="members__head">
+          <h2>Đội của tôi</h2>
+          <div class="members__hint">Danh sách nhân viên dưới quyền</div>
+        </div>
+        <div id="membersGrid" class="members__grid"></div>
+      </section>
 
-      <!-- KANBAN -->
       <section class="kanban" id="kanban"></section>
     </main>
   </div>
 
-  <!-- Dialog: Chi tiết -->
-  <dialog id="detailDlg">
-    <div class="dlg">Chi tiết Task</div>
-    <div class="dlg-body" id="detailBody"></div>
-    <div class="dlg-act">
-      <button class="btn" id="dDelete">Xoá</button>
-      <button class="btn primary" id="dEdit">Sửa</button>
-      <form method="dialog" style="display:inline"><button class="btn" value="cancel">Đóng</button></form>
+  <!-- DETAIL MODAL -->
+  <dialog id="detailDlg" class="task-modal">
+    <div class="task-modal__wrap">
+      <button class="task-modal__close" data-close>&times;</button>
+      <div class="task-modal__header">
+        <div class="task-modal__title" id="dTitle">—</div>
+        <div class="task-modal__subtitle" id="dProject">—</div>
+        <div class="task-modal__badges" id="dBadges"></div>
+      </div>
+      <div class="task-modal__desc" id="dDesc">—</div>
+      <div class="task-modal__hr"></div>
+      <div class="task-modal__grid">
+        <div><div class="task-meta__label">Due Date</div><div class="task-meta__value" id="dDue">—</div></div>
+        <div><div class="task-meta__label">Created</div><div class="task-meta__value" id="dCreated">—</div></div>
+      </div>
+      <div class="task-modal__section">
+        <div class="task-modal__section-title">Assignees</div>
+        <div class="assignees" id="dAssignees"></div>
+      </div>
+      <div class="task-modal__section">
+        <div class="task-modal__section-title"><span>Subtasks (<span id="dSubC">0</span>)</span><span id="dPct" class="task-modal__pct">0%</span></div>
+        <div class="progress"><div class="progress__bar"><div class="progress__fill" id="dProg"></div></div></div>
+      </div>
+      <div class="task-modal__footer">
+        <span class="footer-chip">📎 <b id="fAtt">0</b> attachments</span>
+        <span class="footer-chip">💬 <b id="fCmt">0</b> comments</span>
+        <span class="footer-chip">🏷️ <span id="fSpace">—</span></span>
+      </div>
+      <div class="task-modal__actions">
+        <button class="btn" id="dEdit">Edit Task</button>
+        <button class="btn btn--primary" id="dComplete">Complete Task</button>
+      </div>
     </div>
   </dialog>
 
-  <!-- Dialog: Thêm/Sửa -->
-  <dialog id="taskDlg">
-    <div class="dlg">Thêm/Cập nhật Task</div>
-    <form method="dialog" class="dlg-body" id="taskForm">
-      <input type="hidden" id="taskId" />
-      <div class="dlg-row">
-        <label>Tiêu đề</label>
-        <input id="taskTitle" class="field field-lg" required />
+  
+  <!-- PROFILE DIALOG (Enhanced) -->
+  <dialog id="profileDlg" class="task-modal">
+    <div class="task-modal__wrap">
+      <button class="task-modal__close" data-close>&times;</button>
+      <div class="task-modal__header">
+        <div class="task-modal__title">My Profile</div>
+        <div class="task-modal__subtitle">Thông tin tài khoản</div>
       </div>
-      <div class="dlg-row">
-        <label>Mức ưu tiên</label>
-        <select id="taskPriority" class="field field-lg">
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
-        </select>
+
+      <div class="profile">
+        <div class="profile__left">
+          <img id="pfAvatar" class="profile__avatar" src="assets/img/avatar.svg" alt="avatar"/>
+          <!-- (Optional) đổi ảnh: để sau nếu cần -->
+        </div>
+        <div class="profile__right">
+          <div class="profile__row">
+            <label>Họ & Tên</label>
+            <input id="pfName" class="field" placeholder="Họ tên"/>
+          </div>
+          <div class="profile__row">
+            <label>Số điện thoại</label>
+            <input id="pfPhone" class="field" placeholder="Số điện thoại"/>
+          </div>
+          <div class="profile__row">
+            <label>Email</label>
+            <input id="pfEmail" class="field" placeholder="Email"/>
+          </div>
+          <div class="profile__row">
+            <label>Điểm đánh giá</label>
+            <input id="pfRating" class="field" type="number" min="0" max="100" placeholder="0-100"/>
+          </div>
+        </div>
       </div>
-      <div class="dlg-row">
-        <label>Ghi chú</label>
-        <textarea id="taskNote" rows="3" class="field field-lg" placeholder="Mô tả ngắn…"></textarea>
+
+      <div class="task-modal__hr"></div>
+
+      <div class="profile__row">
+        <div class="task-modal__section-title">Đổi mật khẩu</div>
+        <div class="profile__pw">
+          <input id="pwOld" class="field" type="password" placeholder="Mật khẩu hiện tại"/>
+          <input id="pwNew" class="field" type="password" placeholder="Mật khẩu mới"/>
+          <input id="pwNew2" class="field" type="password" placeholder="Nhập lại mật khẩu mới"/>
+          <button id="btnChangePw" class="btn btn--primary">Đổi mật khẩu</button>
+        </div>
+        <div class="profile__hint">* Mật khẩu này dùng cho màn hình đăng nhập (demo localStorage)</div>
       </div>
-      <div class="dlg-row">
-        <label>Thẻ (tag)</label>
-        <input id="taskTag" class="field field-lg" placeholder="VD: 2/5, 0/1, Design…" />
+
+      <div class="task-modal__actions" style="justify-content:flex-end">
+        <button id="btnSaveProfile" class="btn btn--primary">Lưu hồ sơ</button>
       </div>
-      <div class="dlg-act">
-        <button class="btn" value="cancel">Huỷ</button>
-        <button class="btn primary" id="btnSaveTask" value="default">Lưu</button>
-      </div>
-    </form>
+    </div>
   </dialog>
 
-  <script src="assets/lib/jquery.min.js"></script>
+
+
+  <!-- ASSIGN TASK DIALOG -->
+  <dialog id="assignDlg" class="task-modal">
+    <div class="task-modal__wrap">
+      <button class="task-modal__close" data-close>&times;</button>
+      <div class="task-modal__header">
+        <div class="task-modal__title">Giao việc</div>
+        <div class="task-modal__subtitle">Giao nhiệm vụ trực tiếp cho: <b id="asgEmpName">—</b></div>
+      </div>
+      <form id="assignForm" class="login-card__form" method="dialog" style="margin-top:8px">
+        <label class="login-card__row">
+          <span class="login-card__icon">📝</span>
+          <input id="asgTitle" placeholder="Tiêu đề công việc" required/>
+        </label>
+        <label class="login-card__row">
+          <span class="login-card__icon">📅</span>
+          <input id="asgDue" type="date" required/>
+        </label>
+        <label class="login-card__row">
+          <span class="login-card__icon">🏷️</span>
+          <input id="asgTags" placeholder="Nhãn (ví dụ: UI, API)"/>
+        </label>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="submit" class="btn btn--primary">Giao việc</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- REVIEW (A.5) DIALOG -->
+  <dialog id="reviewDlg" class="task-modal">
+    <div class="task-modal__wrap">
+      <button class="task-modal__close" data-close>&times;</button>
+      <div class="task-modal__header">
+        <div class="task-modal__title">Đánh giá ngày (A.5)</div>
+        <div class="task-modal__subtitle">Nhân viên: <b id="rvEmpName">—</b></div>
+      </div>
+      <div class="task-modal__section">
+        <div class="task-modal__section-title">Tổng quan hôm nay</div>
+        <div id="rvToday" style="color:#111827">—</div>
+      </div>
+      <div class="task-modal__section">
+        <div class="task-modal__section-title">Nhận xét</div>
+        <label class="login-card__row">
+          <span class="login-card__icon">💬</span>
+          <input id="rvNote" placeholder="Nhận xét nhanh..."/>
+        </label>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+          <button id="rvSave" class="btn btn--primary">Lưu đánh giá</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
   <script src="assets/data/mock-data.js"></script>
+  <script src="assets/data/members.js"></script>
   <script src="assets/js/index.js"></script>
 </body>
 </html>
