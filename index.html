@@ -7,116 +7,20 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#f6f7fb;        --panel:#fff;      --panel-2:#fafafa;   --text:#0f172a;
-      --muted:#6b7280;     --border:#e5e7eb;  --primary:#4f46e5;   --shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(15,23,42,.06);
-      --green:#22c55e;     --orange:#f59e0b;  --red:#ef4444;      --purple:#7c3aed;
-      --chip:#eef2ff;      --chip-t:#4f46e5;  --hover:#f1f5f9;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    .app{display:grid;grid-template-columns:260px 1fr;gap:16px;min-height:100vh}
-
-    /* Sidebar */
-    .sidebar{background:var(--panel);border-right:1px solid var(--border);padding:16px;position:sticky;top:0;height:100vh}
-    .brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-    .brand .logo{width:28px;height:28px;display:grid;place-items:center;border-radius:10px;background:var(--primary);color:#fff;font-weight:700}
-    .nav{display:grid;gap:6px;margin:10px 0 20px}
-    .nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text);text-decoration:none}
-    .nav a:hover{background:var(--hover)}
-    .nav .active{background:#eef2ff;color:#1f2667}
-    .sep{height:1px;background:var(--border);margin:16px 0}
-    .mini-h{font-size:12px;color:var(--muted);letter-spacing:.02em;margin-bottom:8px}
-    .proj{display:grid;gap:8px}
-    .proj .item{display:flex;align-items:center;gap:8px;font-size:13px;color:#111827}
-    .status{padding:2px 8px;border-radius:999px;background:#f1f5f9;color:#475569;font-size:11px}
-
-    /* Main */
-    .main{padding:16px 16px 40px}
-    .toolbar{display:grid;grid-template-columns:1fr;gap:12px}
-    .filters{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr 1fr 1fr; gap:10px}
-    .ip{display:flex;align-items:center;gap:8px;border:1px solid var(--border);background:var(--panel);border-radius:12px;padding:10px 12px}
-    .ip input, .ip select{border:none;flex:1;outline:none;background:transparent;font:inherit;color:inherit}
-    .ip .btn{padding:8px 10px;border-radius:10px;background:#eef2ff;color:var(--primary);font-weight:600;border:1px solid #e0e7ff;cursor:pointer}
-
-    .kanban{margin-top:16px;display:grid;grid-template-columns:repeat(5, minmax(260px, 1fr)); gap:14px; align-items:start}
-    .col{background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:220px}
-    .col-h{display:flex;align-items:center;justify-content:space-between;padding:12px 12px;border-bottom:1px solid var(--border)}
-    .col-h .ttl{display:flex;align-items:center;gap:8px;font-weight:700}
-    .col-h .ttl .count{color:#64748b;background:#f1f5f9;border:1px solid var(--border);padding:3px 8px;border-radius:999px;font-size:12px}
-    .col-h .act{display:flex;align-items:center;gap:6px}
-    .icon-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:#fff;display:grid;place-items:center;cursor:pointer}
-    .icon-btn:hover{background:var(--hover)}
-
-    .list{padding:12px;display:grid;gap:10px;min-height:100px}
-
-    /* Card */
-    .card{border:1px solid var(--border);border-radius:12px;background:var(--panel-2);padding:12px;display:grid;gap:8px;cursor:grab}
-    .card.dragging{opacity:.6}
-    .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .pri{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600}
-    .pri.high{background:#fff1f2;color:#b91c1c;border:1px solid #ffe4e6}
-    .pri.medium{background:#fff7ed;color:#9a3412;border:1px solid #ffedd5}
-    .pri.low{background:#ecfeff;color:#155e75;border:1px solid #cffafe}
-    .title{font-weight:600}
-    .meta{display:flex;align-items:center;gap:12px;color:#64748b;font-size:12px}
-    .chip{padding:2px 8px;border-radius:999px;background:var(--chip);color:var(--chip-t);font-size:11px;font-weight:600;border:1px solid #e0e7ff}
-
-    .add{margin-top:2px}
-    .add .add-btn{width:100%;background:#fff;border:1px dashed var(--border);color:#334155;padding:10px;border-radius:10px;cursor:pointer}
-    .add .add-btn:hover{background:var(--hover)}
-
-    /* Dialogs */
-    dialog{border:none;border-radius:16px;box-shadow:var(--shadow);padding:0;max-width:560px;width:92%}
-    .dlg{padding:16px;border-bottom:1px solid var(--border);font-weight:700}
-    .dlg-body{padding:14px;display:grid;gap:10px}
-    .dlg-row{display:grid;gap:8px}
-    .dlg-row label{font-size:12px;color:#64748b}
-    .dlg-row input, .dlg-row textarea, .dlg-row select{padding:10px 12px;border-radius:10px;border:1px solid var(--border);font:inherit}
-    .dlg-act{display:flex;justify-content:flex-end;gap:8px;padding:14px;border-top:1px solid var(--border)}
-    .btn{padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:#fff;cursor:pointer}
-    .btn.primary{background:var(--primary);border-color:#4f46e5;color:#fff}
-
-    @media (max-width: 1300px){
-      .filters{grid-template-columns:1fr 1fr 1fr}
-      .kanban{grid-template-columns:repeat(3, minmax(260px, 1fr))}
-    }
-    @media (max-width: 900px){
-      .app{grid-template-columns:1fr}
-      .sidebar{position:relative;height:auto}
-      .kanban{grid-template-columns:repeat(2, minmax(260px, 1fr))}
-    }
-    @media (max-width: 640px){
-      .kanban{grid-template-columns:1fr}
-    }
-  </style>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/button.css" />
 </head>
 <body>
   <div class="app">
     <!-- SIDEBAR -->
     <aside class="sidebar">
-      <div class="brand"><div class="logo">T</div><strong>Taskora</strong></div>
+      <div class="brand"><div class="logo">O</div><strong>Oshima</strong></div>
       <nav class="nav">
-        <a class="active" href="#">Trang chủ</a>
-        <a href="#">Dự án</a>
-        <a href="#">My Tasks</a>
-        <a href="#">Kanban desk</a>
-        <a href="#">Lịch</a>
-        <a href="#">Liên hệ</a>
-        <a href="#">Thông báo</a>
-        <a href="#">Tìm kiếm</a>
+        <a class="active" href="#">Quản lý công việc</a>
+        
       </nav>
       <div class="sep"></div>
-      <div>
-        <div class="mini-h">LATEST PROJECTS</div>
-        <div class="proj">
-          <div class="item"><span class="status">Progress</span> Figma Design System</div>
-          <div class="item"><span class="status">Planning</span> Keep React</div>
-          <div class="item"><span class="status">Completed</span> StaticMania</div>
-        </div>
-      </div>
+      
     </aside>
 
     <!-- MAIN -->
@@ -127,7 +31,7 @@
           <label class="ip"><input placeholder="Tìm trạng thái…"/></label>
           <label class="ip"><input placeholder="Chọn Loại Nhiệm Vụ…"/></label>
           <label class="ip"><button class="btn" id="btn-refresh">Cập nhật</button><button class="btn" id="btn-clear" style="margin-left:6px">Xoá lọc</button></label>
-          <label class="ip"><input type="date"/></label>
+          <label class="ip"><input type="date" class="field" id="from_picker"></label>
           <label class="ip"><input placeholder="Chọn Dự Án…"/></label>
         </div>
       </div>
@@ -155,11 +59,11 @@
       <input type="hidden" id="taskId" />
       <div class="dlg-row">
         <label>Tiêu đề</label>
-        <input id="taskTitle" required />
+        <input id="taskTitle" class="field field-lg" required />
       </div>
       <div class="dlg-row">
         <label>Mức ưu tiên</label>
-        <select id="taskPriority">
+        <select id="taskPriority" class="field field-lg">
           <option value="high">High</option>
           <option value="medium">Medium</option>
           <option value="low">Low</option>
@@ -167,11 +71,11 @@
       </div>
       <div class="dlg-row">
         <label>Ghi chú</label>
-        <textarea id="taskNote" rows="3" placeholder="Mô tả ngắn…"></textarea>
+        <textarea id="taskNote" rows="3" class="field field-lg" placeholder="Mô tả ngắn…"></textarea>
       </div>
       <div class="dlg-row">
         <label>Thẻ (tag)</label>
-        <input id="taskTag" placeholder="VD: 2/5, 0/1, Design…" />
+        <input id="taskTag" class="field field-lg" placeholder="VD: 2/5, 0/1, Design…" />
       </div>
       <div class="dlg-act">
         <button class="btn" value="cancel">Huỷ</button>
@@ -180,184 +84,8 @@
     </form>
   </dialog>
 
-  <script>
-    // --- Demo data ---
-    const initData = {
-      columns: [
-        { id: 'backlog',  title: 'Backlog',   tasks: [
-          { id: nid(), title: 'Design System Updates', pri: 'high',  date: 'Nov 15', note:'Cập nhật màu và spacing', tags:['Figma','2/5'] },
-        ]},
-        { id: 'todo',     title: 'To Do',     tasks: [
-          { id: nid(), title: 'Task mới', pri: 'medium', date: 'Hôm nay', note:'Đầu việc mới', tags:['0/1','UI'] },
-        ]},
-        { id: 'progress', title: 'In Progress', tasks: [
-          { id: nid(), title: 'User Research Analysis', pri: 'low', date: 'Nov 18', note:'Phỏng vấn 5 user', tags:['4/4'] },
-          { id: nid(), title: 'API Integration', pri: 'high', date: 'Nov 25', note:'Kết nối ERP', tags:['1/4'] },
-        ]},
-        { id: 'review',   title: 'In Review', tasks: [
-          { id: nid(), title: 'Component Documentation', pri: 'high', date: 'Nov 22', note:'Viết doc Button', tags:['2/6'] },
-          { id: nid(), title: 'Product Catalog', pri: 'medium', date: 'Nov 20', note:'Ảnh sản phẩm', tags:['3/3'] },
-        ]},
-        { id: 'done',     title: 'Done',      tasks: [
-          { id: nid(), title: 'Content Strategy', pri: 'medium', date: 'Nov 10', note:'Plan Q4', tags:['3/3'] },
-          { id: nid(), title: 'Analytics Dashboard', pri: 'medium', date: 'Dec 5', note:'V1 hoàn tất', tags:['0/5'] },
-        ]},
-      ]
-    };
-
-    const KEY='taskora_kanban_v1';
-    let state = load();
-    function load(){ try{ const s = localStorage.getItem(KEY); if(s){ return JSON.parse(s);} }catch(e){} return initData; }
-    function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
-
-    const $kanban = document.getElementById('kanban');
-
-    // --- Render ---
-    function render(){
-      $kanban.innerHTML = '';
-      state.columns.forEach(col => {
-        const wrap = el('div','col');
-        // header
-        const h = el('div','col-h');
-        const ttl = el('div','ttl');
-        ttl.append(document.createTextNode(col.title), el('span','count', String(col.tasks.length)) );
-        const act = el('div','act');
-        act.append(iconButton('+',()=> openDialog(col.id)));
-        h.append(ttl, act);
-        wrap.append(h);
-
-        // list
-        const list = el('div','list');
-        list.dataset.col = col.id;
-        list.addEventListener('dragover', onDragOver);
-        list.addEventListener('drop', onDrop);
-
-        col.tasks.forEach(t => list.append(renderCard(t)) );
-
-        // add button
-        const add = el('div','add');
-        const btn = el('button','add-btn','+ Add Task');
-        btn.onclick = ()=> openDialog(col.id);
-        add.append(btn);
-
-        wrap.append(list, add);
-        $kanban.append(wrap);
-      });
-    }
-
-    function renderCard(t){
-      const c = el('div','card');
-      c.draggable = true; c.dataset.id = t.id;
-      c.addEventListener('dragstart', onDragStart);
-      c.addEventListener('dragend', onDragEnd);
-      // mở chi tiết khi click card
-      c.addEventListener('click', ()=> showDetail(t));
-
-      const top = el('div','row');
-      const editBtn = iconButton('✎', (e)=>{ e.stopPropagation(); openDialog(null,t); });
-      const delBtn  = iconButton('🗑', (e)=>{ e.stopPropagation(); removeTask(t.id); });
-      top.append(el('span',`pri ${t.pri}`,cap(t.pri)) , editBtn , delBtn );
-
-      const title = el('div','title', t.title);
-      const meta = el('div','meta');
-      meta.append(el('span','chip', '📅 ' + (t.date||'')));
-      (t.tags||[]).forEach(s=> meta.append(el('span','chip', s)));
-
-      c.append(top,title,meta);
-      return c;
-    }
-
-    // --- Helpers ---
-    function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!==undefined) e.textContent=text; return e; }
-    function cap(s){return s? s.charAt(0).toUpperCase()+s.slice(1):''}
-    function iconButton(symbol, fn){ const b = el('button','icon-btn'); b.type='button'; b.textContent=symbol; b.onclick=fn; return b; }
-    function nid(){ return Math.random().toString(36).slice(2,9); }
-
-    // --- DnD ---
-    let dragId = null, isDragging = false;
-    function onDragStart(e){ dragId = e.currentTarget.dataset.id; isDragging = true; e.currentTarget.classList.add('dragging'); }
-    function onDragEnd(e){ e.currentTarget.classList.remove('dragging'); dragId=null; setTimeout(()=>{ isDragging=false; },0); }
-    function onDragOver(e){ e.preventDefault(); }
-    function onDrop(e){ e.preventDefault(); const colId = e.currentTarget.dataset.col; if(!dragId) return; const info = findTask(dragId); if(!info) return; info.col.tasks.splice(info.i,1); const targetCol = state.columns.find(c=>c.id===colId); targetCol.tasks.push(info.task); save(); render(); }
-
-    function findTask(id){ for(const col of state.columns){ const i = col.tasks.findIndex(x=>x.id===id); if(i>-1) return {col,i,task:col.tasks[i]} } return null }
-
-    // --- CRUD ---
-    function removeTask(id){ const info = findTask(id); if(!info) return; if(confirm('Xoá task này?')){ info.col.tasks.splice(info.i,1); save(); render(); } }
-
-    const dlg = document.getElementById('taskDlg');
-    const fId = document.getElementById('taskId');
-    const fT = document.getElementById('taskTitle');
-    const fP = document.getElementById('taskPriority');
-    const fN = document.getElementById('taskNote');
-    const fG = document.getElementById('taskTag');
-
-    function openDialog(colId, task){
-      dlg.returnValue='';
-      fId.value = task? task.id : '';
-      fT.value  = task? task.title : '';
-      fP.value  = task? task.pri   : 'medium';
-      fN.value  = task? (task.note||'') : '';
-      fG.value  = task? (task.tags||[]).join(', ') : '';
-      dlg.dataset.col = colId || (findTask(task?.id)?.col.id);
-      dlg.showModal();
-    }
-
-    document.getElementById('btnSaveTask').addEventListener('click', (e)=>{
-      e.preventDefault();
-      const id = fId.value || nid();
-      const t  = { id, title:fT.value.trim(), pri:fP.value, note:fN.value.trim(), date:'Hôm nay', tags: fG.value? fG.value.split(',').map(s=>s.trim()).filter(Boolean):[] };
-      const exists = findTask(id);
-      if(exists){ Object.assign(exists.task, t); }
-      else { const cid = dlg.dataset.col; const target = state.columns.find(c=>c.id===cid); target.tasks.push(t); }
-      save(); render(); dlg.close();
-    });
-
-    // --- Detail ---
-    const dDlg   = document.getElementById('detailDlg');
-    const dBody  = document.getElementById('detailBody');
-    const dEdit  = document.getElementById('dEdit');
-    const dDel   = document.getElementById('dDelete');
-    let curTask  = null;
-
-    function showDetail(t){
-      curTask = t;
-      dBody.innerHTML = '';
-      const row = (label, val)=>{ const wrap = el('div','dlg-row'); const lb = document.createElement('label'); lb.textContent=label; const v = document.createElement('div'); v.textContent = val || '—'; wrap.append(lb,v); return wrap; };
-      dBody.append(
-        row('Tiêu đề', t.title),
-        row('Ưu tiên', cap(t.pri)),
-        row('Ngày', t.date||''),
-        row('Ghi chú', t.note||'')
-      );
-      // tags
-      const tagWrap = el('div','dlg-row'); const lb = document.createElement('label'); lb.textContent='Tags'; const box = document.createElement('div'); (t.tags||[]).forEach(s=> box.append(el('span','chip',s))); tagWrap.append(lb,box); dBody.append(tagWrap);
-
-      dEdit.onclick = ()=>{ dDlg.close(); openDialog(null, t); };
-      dDel.onclick  = ()=>{ if(confirm('Xoá task này?')){ dDlg.close(); removeTask(t.id); } };
-
-      dDlg.showModal();
-    }
-
-    // Tìm kiếm
-    document.getElementById('q-task').addEventListener('input', (e)=>{
-      const q = e.target.value.toLowerCase();
-      document.querySelectorAll('.card').forEach(card=>{
-        const title = card.querySelector('.title').textContent.toLowerCase();
-        card.style.display = title.includes(q) ? '' : 'none';
-      });
-    });
-    document.getElementById('btn-clear').onclick = ()=>{
-      document.getElementById('q-task').value = '';
-      document.querySelectorAll('.card').forEach(c=> c.style.display='');
-    };
-    document.getElementById('btn-refresh').onclick = ()=> render();
-
-    // initial render
-    render();
-
-    // Legacy shim: nếu nơi nào còn gọi openDetail(id)
-    window.openDetail = function(id){ try{ const info = findTask(id); if(info) showDetail(info.task); }catch(err){ console.error('openDetail shim error', err); } };
-  </script>
+  <script src="assets/lib/jquery.min.js"></script>
+  <script src="assets/data/mock-data.js"></script>
+  <script src="assets/js/index.js"></script>
 </body>
 </html>
