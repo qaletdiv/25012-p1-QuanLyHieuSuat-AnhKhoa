@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Login - Kanban Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css"/>
+</head>
+<body>
+  <!-- LOGIN PAGE -->
+  <div id="login" class="login">
+    <header class="login__topbar">
+      <div class="login__brand"><img src="assets/img/avatar.svg" class="login__logo"/><span>CAO HÙNG</span></div>
+      <div class="login__actions">
+        <input class="login__search" placeholder="Search..."/>
+        <button class="login__ghost">Login</button>
+        <button class="login__chip">việt nam</button>
+      </div>
+    </header>
+    <div class="login__wrap">
+      <div class="login-card">
+        <div class="login-card__logo"><img src="assets/img/avatar.svg"/><span>CAO HÙNG</span></div>
+        <h2 class="login-card__title">Login to Cao Hùng</h2>
+        <form id="loginForm" class="login-card__form">
+          <label class="login-card__row">
+            <span class="login-card__icon">✉</span>
+            <input id="lg_user" placeholder="Administrator" autocomplete="username" value="123"/>
+          </label>
+          <label class="login-card__row">
+            <span class="login-card__icon">🔒</span>
+            <input id="lg_pass" type="password" value="123" autocomplete="current-password"/>
+            <button type="button" class="login-card__show" data-toggle>Show</button>
+          </label>
+          <div class="login-card__aux"><a href="#" class="login-card__link">Quên Mật Khẩu</a></div>
+          <button class="btn btn--danger login-card__submit" type="submit">Đăng Nhập</button>
+          <button class="btn login-card__ghost" type="button">Chưa có tài khoản? Đăng ký ngay</button>
+          <div class="login-card__hint">Mặc định: <b>user: 123</b> / <b>pass: 123</b></div>
+          <div class="login-card__small">Don't have an account? <a href="#">Sign up</a></div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="assets/js/login.js"></script>
+</body>
+</html>

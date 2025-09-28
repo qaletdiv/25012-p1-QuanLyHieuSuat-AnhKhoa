@@ -1,0 +1,14 @@
+.team-grid{display:grid;gap:16px;grid-template-columns:repeat(1,minmax(0,1fr));}
+@media (min-width:640px){.team-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media (min-width:1024px){.team-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media (min-width:1280px){.team-grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
+.member-card{background:#0b0c0f;border:1px solid #1f2430;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;}
+.member-card .member-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.member-card .btn{flex:1 1 120px;}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;}
+.toolbar .search{flex:1 1 240px;}
+.board{display:flex;gap:16px;align-items:flex-start;}
+.board-col{flex:1;min-width:0;}
+@media (max-width:768px){.board{flex-direction:column;}.board-col{width:100%;}}
+button,.btn,input,select{min-height:40px;}
+.pill{padding:4px 8px;border-radius:999px;border:1px solid #263043;font-size:12px;}
