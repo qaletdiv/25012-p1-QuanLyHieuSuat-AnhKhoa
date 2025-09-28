@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Kanban Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css"/>
+</head>
+<body>
+  <!-- APP PAGE -->
+  <div id="app" class="app">
+    <header class="appbar">
+      <div class="appbar__left"><strong>Kanban Desk</strong></div>
+      <div class="appbar__right">
+        <button id="btnAccount" class="avatar-btn" title="Account">
+          <img src="assets/img/avatar.svg" alt="user"/>
+          <span class="avatar-btn__name">User</span>
+        </button>
+        <div id="acctMenu" class="menu" hidden>
+          <button class="menu__item" data-action="team">Team Management</button>
+          <button class="menu__item" data-action="profile">My Profile</button>
+          <button class="menu__item" data-action="logout">Logout</button>
+        </div>
+      </div>
+    </header>
+    <main class="main">
+      <div class="toolbar">
+        <div class="toolbar__filters">
+          <label class="toolbar__control"><input id="q-task" class="field field--search" placeholder="Tìm task..."/></label>
+          <label class="toolbar__control"><button class="btn" id="btn-refresh">Cập nhật</button><button class="btn" id="btn-clear" style="margin-left:6px">Xoá lọc</button></label>
+          <label class="toolbar__control"><input type="date" class="field" id="from_picker"></label>
+        </div>
+      </div>
+      <!-- TEAM MEMBERS -->
+      <section class="members">
+        <div class="members__head">
+          <h2>Đội của tôi</h2>
+          <div class="members__hint">Danh sách nhân viên dưới quyền</div>
+        </div>
+        <div id="membersGrid" class="members__grid"></div>
+      </section>
+      <section class="kanban" id="kanban"></section>
+    </main>
+  </div>
+
+  <!-- DETAIL MODAL -->
+  <dialog id="detailDlg" class="task-modal">
+    <div class="task-modal__wrap">
+      <button class="task-modal__close" data-close>&times;</button>
+      <div class="task-modal__header">
+        <div class="task-modal__title" id="dTitle">—</div>
+        <div class="task-modal__subtitle" id="dProject">—</div>
+        <div class="task-modal__badges" id="dBadges"></div>
+      </div>
+      <div class="task-modal__desc" id="dDesc">—</div>
+      <div class="task-modal__hr"></div>
+      <div class="task-modal__grid">
+        <div><div class="task-meta__label">Due Date</div><div class="task-meta__value" id="dDue">—</div></div>
+        <div><div class="task-meta__label">Created</div><div class="task-meta__value" id="dCreated">—</div></div>
+      </div>
+      <div class="task-modal__section">
+        <div class="task-modal__section-title">Assignees</div>
+        <div class="assignees" id="dAssignees"></div>
+      </div>
+      <div class="task-modal__section">
+        <div class="task-modal__section-title"><span>Subtasks (<span id="dSubC">0</span>)</span><span id="dPct" class="task-modal__pct">0%</span></div>
+        <div class="progress"><div class="progress__bar"><div class="progress__fill" id="dProg"></div></div></div>
+      </div>
+      <div class="task-modal__footer">
+        <span class="footer-chip">📎 <b id="fAtt">0</b> attachments</span>
+        <span class="footer-chip">💬 <b id="fCmt">0</b> comments</span>
+        <span class="footer-chip">🏷️ <span id="fSpace">—</span></span>
+      </div>
+      <div class="task-modal__actions">
+        <button class="btn" id="dEdit">Edit Task</button>
+        <button class="btn btn--primary" id="dComplete">Complete Task</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- PROFILE DIALOG (Enhanced) -->
+  <dialog id="profileDlg" class="task-modal">
+    <div class="task-modal__wrap">
+      <button class="task-modal__close" data-close>&times;</button>
+      <div class="task-modal__header">
+        <div class="task-modal__title">My Profile</div>
+        <div class="task-modal__subtitle">Thông tin tài khoản</div>
+      </div>
+
+      <div class="profile">
+        <div class="profile__left">
+          <img id="pfAvatar" class="profile__avatar" src="assets/img/avatar.svg" alt="avatar"/>
+        </div>
+        <div class="profile__right">
+          <div class="profile__row">
+            <label>Họ & Tên</label>
+            <input id="pfName" class="field" placeholder="Họ tên"/>
+          </div>
+          <div class="profile__row">
+            <label>Số điện thoại</label>
+            <input id="pfPhone" class="field" placeholder="Số điện thoại"/>
+          </div>
+          <div class="profile__row">
+            <label>Email</label>
+            <input id="pfEmail" class="field" placeholder="Email"/>
+          </div>
+          <div class="profile__row">
+            <label>Điểm đánh giá</label>
+            <input id="pfRating" class="field" type="number" min="0" max="100" placeholder="0-100"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="task-modal__hr"></div>
+
+      <div class="profile__row">
+        <div class="task-modal__section-title">Đổi mật khẩu</div>
+        <div class="profile__pw">
+          <input id="pwOld" class="field" type="password" placeholder="Mật khẩu hiện tại"/>
+          <input id="pwNew" class="field" type="password" placeholder="Mật khẩu mới"/>
+          <input id="pwNew2" class="field" type="password" placeholder="Nhập lại mật khẩu mới"/>
+          <button id="btnChangePw" class="btn btn--primary">Đổi mật khẩu</button>
+        </div>
+        <div class="profile__hint">* Mật khẩu này dùng cho màn hình đăng nhập (demo localStorage)</div>
+      </div>
+
+      <div class="task-modal__actions" style="justify-content:flex-end">
+        <button id="btnSaveProfile" class="btn btn--primary">Lưu hồ sơ</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ASSIGN TASK DIALOG -->
+  <dialog id="assignDlg" class="task-modal">
+    <div class="task-modal__wrap">
+      <button class="task-modal__close" data-close>&times;</button>
+      <div class="task-modal__header">
+        <div class="task-modal__title">Giao việc</div>
+        <div class="task-modal__subtitle">Giao nhiệm vụ trực tiếp cho: <b id="asgEmpName">—</b></div>
+      </div>
+      <form id="assignForm" class="login-card__form" method="dialog" style="margin-top:8px">
+        <label class="login-card__row">
+          <span class="login-card__icon">📝</span>
+          <input id="asgTitle" placeholder="Tiêu đề công việc" required/>
+        </label>
+        <label class="login-card__row">
+          <span class="login-card__icon">📅</span>
+          <input id="asgDue" type="date" required/>
+        </label>
+        <label class="login-card__row">
+          <span class="login-card__icon">🏷️</span>
+          <input id="asgTags" placeholder="Nhãn (ví dụ: UI, API)"/>
+        </label>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="submit" class="btn btn--primary">Giao việc</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- REVIEW (A.5) DIALOG -->
+  <dialog id="reviewDlg" class="task-modal">
+    <div class="task-modal__wrap">
+      <button class="task-modal__close" data-close>&times;</button>
+      <div class="task-modal__header">
+        <div class="task-modal__title">Đánh giá ngày (A.5)</div>
+        <div class="task-modal__subtitle">Nhân viên: <b id="rvEmpName">—</b></div>
+      </div>
+      <div class="task-modal__section">
+        <div class="task-modal__section-title">Tổng quan hôm nay</div>
+        <div id="rvToday" style="color:#111827">—</div>
+      </div>
+      <div class="task-modal__section">
+        <div class="task-modal__section-title">Nhận xét</div>
+        <label class="login-card__row">
+          <span class="login-card__icon">💬</span>
+          <input id="rvNote" placeholder="Nhận xét nhanh..."/>
+        </label>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+          <button id="rvSave" class="btn btn--primary">Lưu đánh giá</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="assets/data/mock-data.js"></script>
+  <script src="assets/data/members.js"></script>
+  <script src="assets/js/app.js"></script>
+
+  <dialog id="newTaskDlg" class="task-modal">
+    <div class="task-modal__wrap">
+      <button class="task-modal__close" data-close>&times;</button>
+      <div class="task-modal__header">
+        <div class="task-modal__title">Thêm task</div>
+        <div class="task-modal__subtitle">Nhập thông tin task mới</div>
+      </div>
+      <div class="task-modal__body">
+        <form id="newTaskForm" data-col="">
+          <label class="login-card__row">
+            <span class="login-card__icon">📝</span>
+            <input id="ntTitle" placeholder="Tiêu đề (bắt buộc)" required/>
+          </label>
+          <div id="ntTitleErr" class="mini" style="color:#b42318;min-height:16px"></div>
+          <label class="login-card__row">
+            <span class="login-card__icon">📅</span>
+            <input id="ntDue" type="date"/>
+          </label>
+          <label class="login-card__row">
+            <span class="login-card__icon">🏷️</span>
+            <input id="ntTags" placeholder="Nhãn (ví dụ: UI, API)"/>
+          </label>
+          <label class="login-card__row">
+            <span class="login-card__icon">👤</span>
+            <select id="ntAssignee"></select>
+          </label>
+          <div class="task-modal__actions" style="margin-top:8px">
+            <button type="button" class="btn" data-close>Hủy</button>
+            <button class="btn btn--primary" id="ntSubmit" type="submit" disabled>Thêm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </dialog>
+
+
+<!-- editfix: begin -->
+<script src="/assets/editfix/storage.js"></script>
+<script src="/assets/editfix/tasks_fix.js"></script>
+<!-- editfix: end -->
+</body>
+</html>
