@@ -148,7 +148,55 @@ function showDetail(t){
   const as=q('dAssignees'); as.innerHTML=''; (t.assignees||[]).forEach(a=>{ const chip=el('span','avatar'); const img=document.createElement('img'); img.src=a.avatar||'assets/img/avatar.svg'; chip.append(img, document.createTextNode(a.name||'')); as.append(chip); });
   const done=t.subtasks?.done||0, total=t.subtasks?.total||0, pct= total? Math.round(done/total*100):0; q('dSubC').textContent=`${done}/${total}`; q('dProg').style.width=pct+'%'; q('dPct').textContent=pct+'%';
   document.getElementById('fAtt').textContent=t.attachments||0; document.getElementById('fCmt').textContent=t.comments||0; document.getElementById('fSpace').textContent=t.space||'—';
-  q('dEdit').onclick=()=>{ t.title=(t.title||'Task')+' (Edited)'; saveState(); render(); dDlg.close(); };
+  q('dEdit').onclick = ()=>{
+    const dlg = document.getElementById('editTaskDlg');
+    const form = document.getElementById('editTaskForm');
+    const etTitle = document.getElementById('etTitle');
+    const etDue = document.getElementById('etDue');
+    const etTags = document.getElementById('etTags');
+    const etAssignee = document.getElementById('etAssignee');
+    const etPri = document.getElementById('etPri');
+    // fill values
+    etTitle.value = t.title || '';
+    etDue.value = (t.date||'').slice(0,10);
+    etTags.value = (t.tags||[]).join(', ');
+    etPri.value = t.pri || 'medium';
+    // assignees list (TEAM_KEY / members)
+    (function populate(){
+      const TEAM_KEY = 'team_members_v1';
+      etAssignee.innerHTML='';
+      let list=[];
+      try{
+        const raw=localStorage.getItem(TEAM_KEY); if(raw) list=JSON.parse(raw);
+      }catch(e){}
+      if(!Array.isArray(list) || !list.length){
+        if(Array.isArray(window.members)) list = window.members.map(m=>({id:String(m.id), name:m.name}));
+      }
+      list.forEach(m=>{ const opt=document.createElement('option'); opt.value=String(m.id); opt.textContent=m.name; etAssignee.appendChild(opt); });
+      if(t.assignee_id) etAssignee.value = String(t.assignee_id);
+    })();
+    if(dlg?.showModal) dlg.showModal(); else if(dlg) dlg.open = true;
+    form.onsubmit = (ev)=>{
+      ev.preventDefault();
+      const title = (etTitle.value||'').trim(); if(!title){ document.getElementById('etTitleErr').textContent='Tiêu đề không được trống.'; etTitle.focus(); return; }
+      t.title = title;
+      t.date = etDue.value || null;
+      t.tags = (etTags.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+      t.pri = etPri.value||'medium';
+      const aId = etAssignee.value||'';
+      // resolve assignee name
+      let aName = aId;
+      try{
+        const raw=localStorage.getItem('team_members_v1');
+        const arr=raw?JSON.parse(raw):[];
+        const hit = (Array.isArray(arr)?arr:[]).find(x=>String(x.id)===String(aId));
+        if(hit) aName = hit.name;
+      }catch(e){}
+      t.assignee_id = aId; t.assignee = aName;
+      saveState(); render();
+      document.getElementById('editTaskDlg').close();
+    };
+  }; saveState(); render(); dDlg.close(); };
   q('dComplete').onclick=()=>{ alert('✅ Completed (demo)'); };
   dDlg.showModal();
 }
